@@ -22,6 +22,9 @@
 .PARAMETER IgnoreList
     Supply an array of VMnames to ignore. This can be used to overlook certain VMs
 
+.PARAMETER vCenter
+    String of what vCenter to connect to
+
 .NOTES
     Version: 1.3
     Author:  Ottetal
@@ -37,7 +40,11 @@ Param
     
     [Parameter()]
     [String[]]
-    $IgnoreList = $Null
+    $IgnoreList = $Null,
+
+    [Parameter()]
+    [String]
+    $vCenter
 )
 #endregion
 
@@ -48,7 +55,7 @@ Param
 # Establishing connection to all vCenter servers with "-alllinked" flag
 try 
 {
-    [Void](Connect-VIServer -Server "vCenter01.nchosting.dk" -Credential $vCenterCredential -AllLinked)
+    [Void](Connect-VIServer -Server $vCenter -Credential $vCenterCredential -AllLinked)
 }
 catch
 {
@@ -60,7 +67,6 @@ catch
 $Today      = [DateTime]::Today
 $TwoDaysAgo = $Today.AddDays(-2)
 $AllVMs     = Get-VM
-$VMcount    = $AllVMs.count
 $Counter    = 0
 
 #endregion
@@ -106,7 +112,7 @@ $Output = foreach ($VM in ($AllVMs))
     
     if ($counter % 100 -eq 0)
     {
-        $Percentage = [Math]::Round(($Counter / $VMcount * 100),2)
+        $Percentage = [Math]::Round(($Counter / $AllVMs.count * 100),2)
         Write-Host "Progress is at $Percentage%"
     }
 
@@ -119,12 +125,12 @@ if ($Null -eq $Output)
     Exit
 }
 
-$HTML = $Output | Sort-Object -Property "Snapshot Created" | ConvertTo-Html    
 #endregion
 
 #region--------------------------------------| HANDLE OUTPUT |-------------------------------------------#
 
 #TODO: Handle your ouput here. I usually send a mail to our task pipeline
+$Output
 
 #endregion
 
